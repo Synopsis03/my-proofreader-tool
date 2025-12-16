@@ -5,48 +5,72 @@
     <title>Custom AI Proofreader Tool</title>
     <style>
         /* Basic styling for readability */
-        body { font-family: sans-serif; max-width: 900px; margin: auto; padding: 20px; background-color: #f4f4f9; }
-        h1 { color: #333; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
-        textarea { width: 100%; height: 200px; padding: 10px; border: 1px solid #aaa; box-sizing: border-box; resize: vertical; }
-        .form-group { margin-bottom: 20px; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        select, button { padding: 10px 15px; margin-right: 15px; border-radius: 5px; cursor: pointer; }
-        button[value="proofread"] { background-color: #4CAF50; color: white; border: none; }
-        button[value="count"] { background-color: #007bff; color: white; border: none; }
-        .result-box { margin-top: 30px; border: 1px solid #ddd; padding: 20px; background: #e9ecef; border-radius: 8px; white-space: pre-wrap; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: auto; padding: 20px; background-color: #f4f4f9; line-height: 1.6; }
+        h1 { color: #333; border-bottom: 2px solid #ccc; padding-bottom: 10px; text-align: center; }
+        textarea { width: 100%; height: 200px; padding: 15px; border: 1px solid #aaa; border-radius: 5px; box-sizing: border-box; resize: vertical; font-size: 16px; }
+        .form-group { margin-bottom: 20px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        label { font-weight: bold; display: block; margin-bottom: 8px; color: #555; }
+        select, button { padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        select { width: 100%; margin-bottom: 10px; border: 1px solid #ccc; }
+        
+        .button-group { display: flex; gap: 15px; }
+        button[value="proofread"] { background-color: #4CAF50; color: white; border: none; flex: 2; font-weight: bold; }
+        button[value="count"] { background-color: #007bff; color: white; border: none; flex: 1; }
+        button:hover { opacity: 0.9; }
+
+        .result-box { margin-top: 30px; border-left: 5px solid #4CAF50; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .result-header { color: #4CAF50; margin-top: 0; }
     </style>
 </head>
 <body>
-    <h1>Custom AI Proofreader Tool</h1>
+
+    <h1>✨ Custom AI Proofreader Tool</h1>
+
     <form method="POST">
         <div class="form-group">
-            <label for="dialect">1. Select Dialect:</label>
-            <select name="dialect" id="dialect">
-                <option value="American English">American English</option>
-                <option value="British English">British English</option>
-            </select>
-            <label for="style_guide">2. Select Style Guide:</label>
-            <select name="style_guide" id="style_guide">
-                <option value="Chicago Manual of Style">Chicago Manual of Style</option>
-                <option value="AP Style">AP Style</option>
-                <option value="General Formal">General Formal</option>
+            <div style="display: flex; gap: 20px;">
+                <div style="flex: 1;">
+                    <label for="dialect">1. Select Dialect:</label>
+                    <select name="dialect" id="dialect">
+                        <option value="American English">American English</option>
+                        <option value="British English">British English</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label for="style_guide">2. Select Style Guide:</label>
+                    <select name="style_guide" id="style_guide">
+                        <option value="Chicago Manual of Style">Chicago Manual of Style</option>
+                        <option value="AP Style">AP Style</option>
+                        <option value="General Formal">General Formal</option>
+                    </select>
+                </div>
+            </div>
+
+            <label for="model_choice" style="margin-top: 15px;">3. Select AI Brain:</label>
+            <select name="model_choice" id="model_choice" style="background-color: #eef9ff; border: 1px solid #bce5ff;">
+                <option value="gemini">Google Gemini 2.5 (Fast & Free)</option>
+                <option value="gpt4">OpenAI GPT-4o (Premium Precision)</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label for="text_content">3. Paste Content Here:</label>
-            <textarea name="text_content" id="text_content" required></textarea>
+            <label for="text_content">4. Paste Content Here:</label>
+            <textarea name="text_content" id="text_content" placeholder="Type or paste your text here..." required></textarea>
         </div>
 
-        <div class="form-group">
-            <button type="submit" name="action" value="proofread">Proofread Content (via Gemini)</button>
+        <div class="button-group">
+            <button type="submit" name="action" value="proofread">Run Proofreader</button>
             <button type="submit" name="action" value="count">Word Count Only</button>
         </div>
     </form>
 
     {% if result %}
         <div class="result-box">
-            <h2>Proofreading Results</h2>
-            {{ result }}
+            <h2 class="result-header">Analysis Results</h2>
+            <hr>
+            <div>
+                {{ result }}
+            </div>
         </div>
     {% endif %}
 
