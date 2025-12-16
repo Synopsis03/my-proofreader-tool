@@ -1,103 +1,69 @@
 import os
+import markdown2
 from flask import Flask, render_template, request
 from markupsafe import Markup
 from google import genai
+from openai import OpenAI
 
 app = Flask(__name__)
 
-# --- 1. API KEY CHECK AND CLIENT SETUP ---
-# The client automatically reads the GEMINI_API_KEY from the environment variable
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if not GEMINI_API_KEY:
-    # If the key isn't set, this will print an error
-    raise ValueError("GEMINI_API_KEY environment variable not set. Please set it in your terminal.")
+# --- 1. Clients Setup ---
+# Gemini Client
+gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-# Initialize the Gemini Client
-client = genai.Client(api_key=GEMINI_API_KEY)
+# Grok (xAI) Client - This replaces OpenAI
+grok_client = OpenAI(
+    api_key=os.getenv("GROK_API_KEY"),
+    base_url="https://api.x.ai/v1"
+)
 
-
-# --- 2. FUNCTION FOR THE 'WORD COUNT ONLY' BUTTON ---
-
-def get_word_count(content):
-    """A simple Python function to count words locally, no API call needed."""
-    word_count = len(content.split())
-    return Markup(f"### 2. Word Count Result\nYour content contains **{word_count}** words.")
-
-
-# --- 3. FUNCTION FOR THE 'PROOFREAD CONTENT' BUTTON (GEMINI API CALL) ---
-
-def get_proofreading_result(content, dialect, style_guide):
-    """Constructs the Master Prompt and calls the Gemini API."""
-
-    # This is your final, complete prompt injected with user choices
+# --- 2. Logic Functions ---
+def get_proofreading_result(content, dialect, style_guide, model_choice):
     master_prompt = f"""
-    # ✨ Final Master Proofreading Prompt (Model Instructions) ✨
-
-    ROLE: Act as an expert, highly constrained copyeditor.
-
-    GOAL: Proofread the provided text (below) to eliminate all errors.
-
-    ### I. Style and Context
-    * **Style Rule:** Adhere strictly to {dialect} spelling/grammar and the rules of {style_guide} for punctuation and formatting (e.g., spacing, titles).
-
-    ### II. Core Constraints (Non-Negotiable)
-    1.  **No Rephrasing:** Fix errors without altering the original sentence structure or meaning.
-    2.  **Word Count (Max 250):** If content exceeds 250 words, reduction must be achieved *only* by removing redundant words/phrases (no rephrasing).
-    3.  **Inevitable Changes:** If a critical change violates Constraint 1, a 3-sentence justification **must** be included in the final output.
-
-    ### III. Required Output Format
-
-    Provide your response using the following four headings, in this exact order. Use Markdown formatting (like bolding and lists) for clarity under each heading:
-
-    **1. Error Severity Score:**
-
-    **2. Proofread Content:**
-
-    **3. Log of Changes:**
-
-    **4. Justification for Inevitable Changes:**
-
-    ---
-    **Content to Proofread:**
-
-    {content}
+    Act as an expert editor. Proofread this {dialect} text using {style_guide} rules.
+    Use Markdown: '###' for headers, '**' for bold, and '-' for bullet points.
+    
+    CONTENT: {content}
     """
 
     try:
-        # This is the core API call
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=master_prompt
-        )
-        return Markup(response.text)
+        # Check if the user selected 'grok' in the dropdown
+        if model_choice == 'grok':
+            response = grok_client.chat.completions.create(
+                model="grok-beta",
+                messages=[{"role": "user", "content": master_prompt}]
+            )
+            raw_text = response.choices[0].message.content
+        else:
+            # Default to Gemini if 'gemini' is selected
+            response = gemini_client.models.generate_content(
+                model='gemini-2.0-flash', 
+                contents=master_prompt
+            )
+            raw_text = response.text
+
+        # Fix the "One Huge Paragraph" issue by converting Markdown to HTML
+        formatted_html = markdown2.markdown(raw_text)
+        return Markup(formatted_html)
 
     except Exception as e:
-        return Markup(f"### ⚠️ API Error\nCould not process the request. Check your API Key and terminal connection: {e}")
-
-
-# --- 4. FLASK WEB ROUTES (Handles the Button Logic) ---
+        # Handle the 503 Overloaded or API errors gracefully
+        error_msg = f"### ⚠️ API Error\nCould not process the request. {str(e)}"
+        return Markup(markdown2.markdown(error_msg))
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     result = None
-
     if request.method == 'POST':
-        # Get data from the HTML form
-        text_content = request.form['text_content']
-        dialect = request.form['dialect']
-        style_guide = request.form['style_guide']
-
-        # Check which button was pressed using the 'name="action"' from the HTML
-        submitted_action = request.form.get('action') 
-
-        if submitted_action == 'proofread':
-            result = get_proofreading_result(text_content, dialect, style_guide)
-
-        elif submitted_action == 'count':
-            result = get_word_count(text_content)
-
+        text_content = request.form.get('text_content')
+        dialect = request.form.get('dialect')
+        style_guide = request.form.get('style_guide')
+        model_choice = request.form.get('model_choice')
+        
+        if request.form.get('action') == 'proofread':
+            result = get_proofreading_result(text_content, dialect, style_guide, model_choice)
+            
     return render_template('index.html', result=result)
 
-# --- 5. RUN THE APP ---
 if __name__ == '__main__':
     app.run(debug=True)

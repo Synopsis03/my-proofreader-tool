@@ -4,22 +4,40 @@
     <meta charset="UTF-8">
     <title>Custom AI Proofreader Tool</title>
     <style>
-        /* Basic styling for readability */
+        /* Modern UI Styling */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: auto; padding: 20px; background-color: #f4f4f9; line-height: 1.6; }
         h1 { color: #333; border-bottom: 2px solid #ccc; padding-bottom: 10px; text-align: center; }
-        textarea { width: 100%; height: 200px; padding: 15px; border: 1px solid #aaa; border-radius: 5px; box-sizing: border-box; resize: vertical; font-size: 16px; }
+        
         .form-group { margin-bottom: 20px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         label { font-weight: bold; display: block; margin-bottom: 8px; color: #555; }
+        
+        textarea { width: 100%; height: 250px; padding: 15px; border: 1px solid #aaa; border-radius: 5px; box-sizing: border-box; resize: vertical; font-size: 16px; margin-bottom: 10px; }
+        
         select, button { padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 14px; }
-        select { width: 100%; margin-bottom: 10px; border: 1px solid #ccc; }
+        select { width: 100%; margin-bottom: 15px; border: 1px solid #ccc; background-color: #fff; }
         
         .button-group { display: flex; gap: 15px; }
         button[value="proofread"] { background-color: #4CAF50; color: white; border: none; flex: 2; font-weight: bold; }
         button[value="count"] { background-color: #007bff; color: white; border: none; flex: 1; }
         button:hover { opacity: 0.9; }
 
-        .result-box { margin-top: 30px; border-left: 5px solid #4CAF50; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .result-header { color: #4CAF50; margin-top: 0; }
+        /* AI Results Formatting - Fixes the "One Big Paragraph" issue */
+        .result-box { 
+            margin-top: 30px; 
+            padding: 25px; 
+            background: white; 
+            border-radius: 8px; 
+            border-left: 10px solid #4CAF50;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .result-header { color: #4CAF50; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        
+        /* Ensures headers and lists inside the result show up correctly */
+        .result-content h1, .result-content h2, .result-content h3 { color: #2c3e50; margin: 15px 0 10px 0; }
+        .result-content p { margin-bottom: 15px; }
+        .result-content ul, .result-content ol { padding-left: 25px; margin-bottom: 15px; }
+        .result-content li { margin-bottom: 8px; }
+        .result-content strong { color: #000; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -48,8 +66,8 @@
 
             <label for="model_choice" style="margin-top: 15px;">3. Select AI Brain:</label>
             <select name="model_choice" id="model_choice" style="background-color: #eef9ff; border: 1px solid #bce5ff;">
-                <option value="gemini">Google Gemini 2.5 (Fast & Free)</option>
-                <option value="gpt4">OpenAI GPT-4o (Premium Precision)</option>
+                <option value="gemini">Google Gemini 2.5 (Free Tier)</option>
+                <option value="grok">xAI Grok (Fast & Direct)</option>
             </select>
         </div>
 
@@ -67,8 +85,7 @@
     {% if result %}
         <div class="result-box">
             <h2 class="result-header">Analysis Results</h2>
-            <hr>
-            <div>
+            <div class="result-content">
                 {{ result }}
             </div>
         </div>
